@@ -1,14 +1,25 @@
+
+"""
+@author: Akash Maji
+@email: akashmaji@iisc.ac.in
+@intent: implementing simple transformer using python
+"""
+
 import random as rd
 import math
+
 # embedding size = 256 (i.e. d_model = 256)
 d_model = 256
 TEN_K = 10000
 n_heads = 8
 
+# just for example
 vocab_size = 1024
 
 # to store input embeddings
 input_embeddings_n = []
+# to store output embeddings
+output_embeddings_n = []
 # number of words
 n = 256
 # to store output probabilities
@@ -149,6 +160,7 @@ heads_list = [
 
 ]
 
+# concat n_heads of same width into one matrix
 def concat_heads(heads_list, n_heads, n, head_width):
     assert len(heads_list) == n_heads
     n_rows = len(heads_list[0])
@@ -312,7 +324,7 @@ def multi_head_attention(Q, K, V, n, d_model):
     mh_attenention = matrix_mul(heads_merged, W_o, n, d_model, d_model, d_model)
     return mh_attenention
 
-
+# do row broadcasted addition
 def matrix_add_broadcasted(A, b, p, q, r, s):
     assert r == 1 and q == s and len(A) == p and len(b) == s
     added_matrix = []
@@ -366,6 +378,8 @@ print_matrix(normalized_output, n, d_model)
 output_embdeddings = generate_random_values(n, d_model)
 weights_stabilized = generate_random_values(d_model, vocab_size)
 bias_vector = generate_random_values(1, vocab_size)[0]
+
+
 output_probabilities = linear_transformation_with_weight_bias(output_embdeddings, weights_stabilized, bias_vector, \
                                        n, d_model, d_model, vocab_size, 1, vocab_size)
 print_matrix(output_probabilities, n, vocab_size)

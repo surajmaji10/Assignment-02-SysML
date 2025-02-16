@@ -8,29 +8,20 @@
 import random as rd
 import math
 
-# number of words in sequence
-n = 256
 # embedding size = 256 (i.e. d_model = 256)
 d_model = 256
-
 TEN_K = 10000
-
-# number of heads for MHA
 n_heads = 8
 
-# just for example take 1024(can be anything)
+# just for example
 vocab_size = 1024
 
 # to store input embeddings
 input_embeddings_n = []
 # to store output embeddings
 output_embeddings_n = []
-
-# to store input embeddings
-input_encodings_n = []
-# to store output embeddings
-output_encodings_n = []
-
+# number of words
+n = 256
 # to store output probabilities
 output_probabilities = []
 
@@ -43,8 +34,12 @@ def generate_random_values(n, d_model):
     return matrix
 
 
-# save a m*n matrix into a file
-def save_matrix_m_n(matrix, m, n, filename="matrix.txt"):
+input_embeddings_n = generate_random_values(n, d_model)
+
+weights_learned = generate_random_values(d_model, vocab_size)
+bias_vector = generate_random_values(1, vocab_size)[0]
+
+def save_matrix_m_n(matrix, m, n, filename="sample.txt"):
     with open(filename, "w") as f:
         for i in range(m):
             row = matrix[i]
@@ -54,7 +49,6 @@ def save_matrix_m_n(matrix, m, n, filename="matrix.txt"):
             f.write("\n")  
         f.write("\n")
 
-# save a n*d-model embedding (matrix) into a file
 def save_embedding_n(input_embeddings_n, n, d_model, filename="embedding_output.txt"):
     with open(filename, "w") as f:
         for i in range(n):
@@ -75,6 +69,7 @@ def print_embedding_n(input_embeddings_n, n, d_model):
         print("")
     print("")
 
+# print_embedding_n(input_embeddings_n, n, d_model)
 
 # does simple vector addition of `vector_x` and `vector_y` each of size `size`
 def vector_add(vector_x, vector_y, size):
@@ -104,7 +99,6 @@ def positional_encoder_vector(vector, size, pos):
         encoded_vector.append(encoded)
     return encoded_vector
 
-
 # positionally encode a sequence
 def positional_encoder_n(input_embeddings_n, n, d_model):
     assert len(input_embeddings_n) == n
@@ -115,6 +109,9 @@ def positional_encoder_n(input_embeddings_n, n, d_model):
         input_embeddings_n[pos] = vector_add(vector, pos_encoded_vector, d_model)
     return input_embeddings_n
 
+positional_encoder_n(input_embeddings_n, n, d_model)
+# print_embedding_n(input_embeddings_n, n, d_model)
+save_embedding_n(input_embeddings_n, n, d_model, "saved.txt")
 
 # do matrix transpose
 def matrix_transpose(matrix, m, n):
@@ -127,8 +124,9 @@ def matrix_transpose(matrix, m, n):
             transposed[j][i] = matrix[i][j]
     return transposed
 
+# print(matrix_transpose(matrix=[[1, 2, 3], [4, 5, 6]], m = 2, n = 3))
 
-# print a matrix to console
+
 def print_matrix(matrix, n_rows, head_width):
     assert n_rows == len(matrix)
     for i in range(n_rows):
@@ -139,6 +137,28 @@ def print_matrix(matrix, n_rows, head_width):
         print()
     print()
 
+
+heads_list = [
+    [
+        [1, 2],
+        [3, 4],
+        [4, 5]
+    ],
+    [   [7, 8],
+        [9, 10],
+        [11, 12]
+    ],
+    [
+        [1, 2],
+        [3, 4],
+        [4, 5]
+    ],
+    [   [7, 8],
+        [9, 10],
+        [11, 12]
+    ]
+
+]
 
 # concat n_heads of same width into one matrix
 def concat_heads(heads_list, n_heads, n, head_width):
@@ -156,8 +176,11 @@ def concat_heads(heads_list, n_heads, n, head_width):
         multi_head.append(row)
 
     return multi_head
-
-
+    
+    
+# mh = concat_heads(heads_list, 4, 3, 2)
+# print_matrix(mh, 3, 8)
+    
 # implement scalar matrix multiplication
 def scalar_matrix_mul(A, m, n, alpha):
     assert len(A) == m
@@ -190,6 +213,15 @@ def matrix_mul(A, B, p, q, r, s):
                 C[i][j] = C[i][j] + A[i][k] * B[k][j]
     return C
 
+# p, q, r, s = 3, 4, 4, 5
+# # Generate random p.q matrix A with values 0 or 1
+# A = [[rd.random() for _ in range(q)] for _ in range(p)]
+
+# # Generate random r.s matrix B with values 0 or 1
+# B = [[rd.random() for _ in range(s)] for _ in range(r)]
+
+# C = matrix_mul(A, B, p, q, r, s)
+# print_matrix(C, p, s)
 
 # normalize a vector
 def normalize(vector, n):
@@ -213,6 +245,11 @@ def matrix_normalize(A, m, n):
         assert len(row) == n
         C.append(normalize(row, n))
     return C
+
+# 1 2 3 4 5 6 7 8
+# 2 3 4 6 7 8 1 1
+# 2 3 4 5 6 7 8 9
+
 
 
 ## split a matrix into heads
@@ -304,85 +341,52 @@ def linear_transformation_with_weight_bias(X, W, b, n, d_model, wd_model1, wd_mo
     return Z
 
 
-# obtain the input embedding
-input_embeddings_n = generate_random_values(n, d_model)
-# obtain the positional encoding of input embedding
-input_encoding_n = positional_encoder_n(input_embeddings_n, n, d_model)
 
-# perform multihead-attention with Q,K,V inputs
-mha_result = multi_head_attention(input_encoding_n, input_encoding_n, input_encoding_n, n, d_model)
-print_matrix(mha_result, n, d_model)
-save_matrix_m_n(mha_result, n, d_model, "mha_enc.txt")
 
-# add the mha_result and input
-added_output = matrix_add(mha_result, input_encoding_n, n, d_model)
+# res = self_attention(input_embeddings_n, input_embeddings_n, input_embeddings_n, n, d_model)
+# print_matrix(res, n, d_model)
+# print_matrix(input_embeddings_n, n, d_model)
+
+# added_output = matrix_add(res, input_embeddings_n, n, d_model)
+# print_matrix(added_output, n, d_model)
+
+
+# normalized_output = matrix_normalize(added_output, n, d_model)
+# print_matrix(normalized_output, n, d_model)
+
+# matrix = [
+#     [1, 2, 3, 4, 5, 6, 7, 8],
+#     [2, 3, 4, 6, 7, 8, 1, 1],
+#     [2, 3, 4, 5, 6, 7, 8, 9]
+# ]
+
+# out = split_into_heads(matrix, 3, 8, 4)
+# print(out)
+
+
+res = multi_head_attention(input_embeddings_n, input_embeddings_n, input_embeddings_n, n, d_model)
+print_matrix(res, n, d_model)
+print_matrix(input_embeddings_n, n, d_model)
+
+added_output = matrix_add(res, input_embeddings_n, n, d_model)
 print_matrix(added_output, n, d_model)
-save_matrix_m_n(added_output, n, d_model, "added_enc.txt")
 
-# normalize the added output matrix
+
 normalized_output = matrix_normalize(added_output, n, d_model)
 print_matrix(normalized_output, n, d_model)
-save_matrix_m_n(normalized_output, n, d_model, "normalized_enc.txt")
 
-# this is the output of our encoder
-encoder_output = normalized_output
-
-print_matrix(encoder_output, n, d_model)
-save_matrix_m_n(encoder_output, n, d_model, "encoder_output.txt")
-
-
-# obtain the output embedding
-output_embeddings_n = generate_random_values(n, d_model)
-# obtain the positional encoding of output embedding
-output_encoding_n = positional_encoder_n(input_embeddings_n, n, d_model)
-
-# perform masked multihead attention(which is self-attention)
-masked_mha_result = self_attention(output_encoding_n, output_encoding_n, output_encoding_n, n, d_model)
-
-# add the masked_mha_result and output encoding
-added_output = matrix_add(masked_mha_result, output_encoding_n, n, d_model)
-print_matrix(added_output, n, d_model)
-save_matrix_m_n(added_output, n, d_model, "added_enc.txt")
-
-# normalize the added output matrix
-normalized_output = matrix_normalize(added_output, n, d_model)
-print_matrix(normalized_output, n, d_model)
-save_matrix_m_n(normalized_output, n, d_model, "normalized_dec1.txt")
-
-# perform multihead attention with encoder outputs, and normalized output
-mha_result = multi_head_attention(encoder_output, encoder_output, normalized_output, n, d_model)
-
-# add the mha_result and normalized output
-added_output = matrix_add(mha_result, normalized_output, n, d_model)
-print_matrix(added_output, n, d_model)
-save_matrix_m_n(added_output, n, d_model, "added_enc.txt")
-
-# normalize the added output matrix
-normalized_output = matrix_normalize(added_output, n, d_model)
-print_matrix(normalized_output, n, d_model)
-save_matrix_m_n(normalized_output, n, d_model, "normalized_dec2.txt")
-
-
-# assume stabilized weights and bias available
+output_embdeddings = generate_random_values(n, d_model)
 weights_stabilized = generate_random_values(d_model, vocab_size)
 bias_vector = generate_random_values(1, vocab_size)[0]
 
 
-# apply linear transform on the normalized_output
-linear_output = linear_transformation_with_weight_bias(normalized_output, weights_stabilized, bias_vector, \
-                                       n, d_model, d_model, vocab_size, 1, vocab_size
-                                       )
-print_matrix(linear_output, n, vocab_size)
-save_matrix_m_n(linear_output, n, vocab_size, "linear_output.txt")
-
-# apply softmax to this 
-softmax_output = soft_max(linear_output, n, vocab_size)
-print_matrix(softmax_output, n, vocab_size)
-save_matrix_m_n(softmax_output, n, vocab_size, "softmax_output.txt")
-
-# this is nothing but output probabilties
-output_probabilities = softmax_output
+output_probabilities = linear_transformation_with_weight_bias(output_embdeddings, weights_stabilized, bias_vector, \
+                                       n, d_model, d_model, vocab_size, 1, vocab_size)
 print_matrix(output_probabilities, n, vocab_size)
-save_matrix_m_n(output_probabilities, n, vocab_size, "probs_output.txt")
 
-## ENDS
+
+soft = soft_max(output_probabilities, n, vocab_size)
+print_matrix(soft, n, vocab_size)
+save_matrix_m_n(soft, n, vocab_size, "tmp.txt")
+
+

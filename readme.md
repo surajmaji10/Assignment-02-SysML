@@ -3,6 +3,18 @@
 ## Overview
 This program implements fundamental components of a Transformer model, including input embedding generation, positional encoding, self-attention, multi-head attention, matrix operations, and output probability computation. The script generates random embeddings, applies attention mechanisms, and computes probabilities using a softmax function.
 
+## Usage
+To run:
+```bash
+python transformer.py
+```
+This will generate a lot of intermediary `.txt` files 
+
+To clear all junk:
+```bash
+python delete.py
+```
+
 ## Functions
 
 ### 1. `generate_random_values(n, d_model)`
